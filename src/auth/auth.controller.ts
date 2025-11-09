@@ -44,6 +44,9 @@ export class AuthController {
     description: 'Returns access and refresh tokens',
   })
   async login(@Body() dto: LoginDto) {
+    console.log(LoginDto);
+    console.log(this.auth.login(dto.email, dto.password));
+
     return this.auth.login(dto.email, dto.password);
   }
 
