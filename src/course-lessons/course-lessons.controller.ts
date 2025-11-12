@@ -4,8 +4,8 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
+  Put,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CourseLessonsService } from './course-lessons.service';
@@ -40,7 +40,7 @@ export class CourseLessonsController {
     return this.service.findOne(idOrSlug);
   }
 
-  @Patch(':lessonId')
+  @Put(':lessonId')
   @ApiOperation({ summary: 'Update lesson' })
   update(
     @Param('lessonId') lessonId: string,

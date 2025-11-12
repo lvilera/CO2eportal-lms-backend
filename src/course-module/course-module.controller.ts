@@ -4,8 +4,8 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
+  Put,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CourseModuleService } from './course-module.service';
@@ -33,7 +33,7 @@ export class CourseModuleController {
     return this.service.findByCourse(courseId);
   }
 
-  @Patch(':moduleId')
+  @Put(':moduleId')
   @ApiOperation({ summary: 'Update module' })
   update(
     @Param('moduleId') moduleId: string,

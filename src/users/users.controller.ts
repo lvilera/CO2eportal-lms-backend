@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 import { GetUser } from 'src/common/decorators/get-user.decorator';
@@ -43,9 +43,9 @@ export class UsersController {
   }
 
   /**
-   * PATCH /users/me
+   * Put /users/me
    */
-  @Patch('me')
+  @Put('me')
   @ApiOkResponse({
     description: 'Updates the authenticated user profile.',
     schema: {

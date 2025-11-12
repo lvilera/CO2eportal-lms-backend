@@ -8,27 +8,20 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PaginatedQueryDto } from 'src/common/dto/pagination.dto';
-import { CourseService } from './course.service';
-import { CreateCourseDto } from './dto/create-course.dto';
-import { UpdateCourseDto } from './dto/update-course.dto';
+import { CourseCategoryService } from './course-category.service';
+import { CreateCourseCategoryDto } from './dto/create-course-category.dto';
+import { UpdateCourseCategoryDto } from './dto/update-course-category.dto';
 
-@ApiTags('Courses')
-@ApiBearerAuth()
-@Controller('courses')
-export class CourseController {
-  constructor(private readonly service: CourseService) {}
+@Controller('course-category')
+export class CourseCategoryController {
+  constructor(private readonly service: CourseCategoryService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a course' })
   @ApiResponse({ status: 201, description: 'Course created' })
-  create(@Body() dto: CreateCourseDto) {
+  create(@Body() dto: CreateCourseCategoryDto) {
     return this.service.create(dto);
   }
 
@@ -46,7 +39,7 @@ export class CourseController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update a course' })
-  update(@Param('id') id: string, @Body() dto: UpdateCourseDto) {
+  update(@Param('id') id: string, @Body() dto: UpdateCourseCategoryDto) {
     return this.service.update(id, dto);
   }
 
