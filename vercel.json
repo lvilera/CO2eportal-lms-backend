@@ -1,13 +1,9 @@
 {
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/"
-    }
-  ],
+  "version": 3,
   "functions": {
     "api/index.js": {
-      "includeFiles": "node_modules/**"
+      "runtime": "nodejs18.x",
+      "includeFiles": "dist/**"
     }
   },
   "routes": [{ "src": "/(.*)", "dest": "/api/index.js" }]
