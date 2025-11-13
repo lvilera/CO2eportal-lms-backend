@@ -1,3 +1,14 @@
 {
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ],
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "node_modules/**"
+    }
+  },
   "routes": [{ "src": "/(.*)", "dest": "/api/index.js" }]
 }
