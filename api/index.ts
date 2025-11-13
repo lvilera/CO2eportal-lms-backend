@@ -1,17 +1,18 @@
+import { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { createServer } from '@vercel/node';
-import { AppModule } from 'src/app.module';
+import { Express } from 'express';
+import { AppModule } from '../dist/app.module'; // or '../src/app.module' depending on build
 
-let server: any;
+let nestApp: INestApplication;
+let server: Express;
 
 export default async function handler(req: any, res: any) {
-  if (!server) {
-    const app = await NestFactory.create(AppModule, { bodyParser: false });
-    await app.init();
-
-    const expressApp = app.getHttpAdapter().getInstance();
-    server = createServer(expressApp);
+  // lazy init – only on first request
+  if (!nestApp) {
+    nestApp = await NestFactory.create(AppModule, { bodyParser: false });
+    await nestApp.init();
+    server = nestApp.getHttpAdapter().getInstance();
   }
 
-  return server.emit('request', req, res);
+  return server(req, res);
 }
