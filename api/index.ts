@@ -1,20 +1,17 @@
-import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from '../src/app.module';
+import { createServer } from '@vercel/node';
+import { AppModule } from 'src/app.module';
 
-let cachedServer: any;
+let server: any;
 
 export default async function handler(req: any, res: any) {
-  if (!cachedServer) {
-    const app = await NestFactory.create(AppModule, {
-      logger: ['error', 'warn'],
-    });
-    app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, transform: true }),
-    );
-    // Do NOT call app.listen() on Vercel
+  if (!server) {
+    const app = await NestFactory.create(AppModule, { bodyParser: false });
     await app.init();
-    cachedServer = app.getHttpAdapter().getInstance();
+
+    const expressApp = app.getHttpAdapter().getInstance();
+    server = createServer(expressApp);
   }
-  return cachedServer(req, res);
+
+  return server.emit('request', req, res);
 }
