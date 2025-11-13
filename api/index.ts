@@ -1,34 +1,30 @@
-import type { INestApplication } from '@nestjs/common';
-import { ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { Express } from 'express';
 import { AppModule } from 'src/app.module';
 
-let app: INestApplication | null = null;
-let server: Express | null = null;
+let app: INestApplication;
+let server: Express;
 
 export default async function handler(req: any, res: any) {
   try {
     if (!server) {
+      // create Nest app once per Lambda container
       app = await NestFactory.create(AppModule, {
         logger: ['error', 'warn'],
       });
 
-      app.useGlobalPipes(
-        new ValidationPipe({
-          whitelist: true,
-          transform: true,
-          forbidNonWhitelisted: true,
-        }),
-      );
+      app
+        .useGlobalPipes
+        // keep same options you use locally
+        // import ValidationPipe at top if you want to reuse
+        ();
 
-      // no app.listen() in serverless
       await app.init();
-
       server = app.getHttpAdapter().getInstance();
     }
 
-    return (server as Express)(req, res);
+    return server(req, res);
   } catch (err) {
     console.error('Nest serverless error:', err);
     res.statusCode = 500;
