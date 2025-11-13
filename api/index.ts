@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { Express } from 'express';
-import { AppModule } from '../dist/src/app.module'; // or '../src/app.module' depending on build
+import { AppModule } from '../src/app.module'; // or '../src/app.module' depending on build
 
 let nestApp: INestApplication;
 let server: Express;
