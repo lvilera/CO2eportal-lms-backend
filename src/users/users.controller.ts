@@ -1,20 +1,32 @@
-import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 import { GetUser } from 'src/common/decorators/get-user.decorator';
-import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+
+import { Roles } from 'src/common/dto/roles.decorator';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { QueryUserDto } from './dto/query-user.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
 
 interface CurrentUserPayload {
-  sub: string; // user id
+  sub: string;
   email: string;
   role?: 'user' | 'admin' | 'instructor';
 }
 
 @ApiTags('Users')
-@ApiBearerAuth()
-@UseGuards(JwtAccessGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -23,45 +35,93 @@ export class UsersController {
    * GET /users/me
    */
   @Get('me')
-  @ApiOkResponse({
-    description: 'Returns the authenticated user profile.',
-    schema: {
-      example: {
-        id: '665a3a8d0b1f1a2b3c4d5e6f',
-        email: 'jane@acme.com',
-        firstName: 'Jane',
-        lastName: 'Doe',
-        role: 'user',
-        isActive: true,
-        createdAt: '2025-01-01T12:00:00.000Z',
-        updatedAt: '2025-01-03T12:00:00.000Z',
-      },
-    },
-  })
+  @ApiOkResponse({ description: 'Returns the authenticated user profile.' })
   me(@GetUser() user: CurrentUserPayload) {
     return this.usersService.me(user.sub);
   }
 
   /**
-   * Put /users/me
+   * PUT /users/me
    */
-  @Put('me')
-  @ApiOkResponse({
-    description: 'Updates the authenticated user profile.',
-    schema: {
-      example: {
-        id: '665a3a8d0b1f1a2b3c4d5e6f',
-        email: 'jane@acme.com',
-        firstName: 'Janet',
-        lastName: 'Doe',
-        role: 'user',
-        isActive: true,
-        createdAt: '2025-01-01T12:00:00.000Z',
-        updatedAt: '2025-01-03T12:10:00.000Z',
-      },
-    },
-  })
+  @Patch('me')
+  @ApiOkResponse({ description: 'Updates the authenticated user profile.' })
   updateMe(@GetUser() user: CurrentUserPayload, @Body() dto: UpdateMeDto) {
     return this.usersService.updateMe(user.sub, dto);
+  }
+
+  /**
+   * PATCH /users/me/change-password
+   */
+  @Patch('me/change-password')
+  @ApiOkResponse({ description: 'Change password for the authenticated user.' })
+  changeMyPassword(
+    @GetUser() user: CurrentUserPayload,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.usersService.changePassword(
+      user.sub,
+      dto.currentPassword,
+      dto.newPassword,
+    );
+  }
+
+  /**
+   * ADMIN CRUD — guarded by @Roles('admin')
+   */
+
+  // Create user (admin)
+  @Post()
+  @Roles('admin')
+  @ApiCreatedResponse({ description: 'Create a new user (admin only).' })
+  create(@Body() dto: CreateUserDto) {
+    return this.usersService.adminCreate(dto);
+  }
+
+  // List users with pagination/filter
+  @Get()
+  @Roles('admin')
+  @ApiOkResponse({ description: 'List users with pagination and filters.' })
+  async list(@Query() query: QueryUserDto) {
+    return this.usersService.list(query);
+  }
+
+  // Get one by id
+  @Get(':id')
+  @Roles('admin')
+  @ApiOkResponse({ description: 'Get user by id.' })
+  async getById(@Param('id') id: string) {
+    return this.usersService.getByIdSanitized(id);
+  }
+
+  // Update by id
+  @Patch(':id')
+  @Roles('admin')
+  @ApiOkResponse({ description: 'Update user by id.' })
+  async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.usersService.adminUpdate(id, dto);
+  }
+
+  // Soft-delete by id
+  @Delete(':id')
+  @Roles('admin')
+  @ApiOkResponse({ description: 'Soft delete user by id.' })
+  async remove(@Param('id') id: string) {
+    return this.usersService.softDelete(id);
+  }
+
+  // Optional: restore soft-deleted
+  @Patch(':id/restore')
+  @Roles('admin')
+  @ApiOkResponse({ description: 'Restore a soft-deleted user.' })
+  async restore(@Param('id') id: string) {
+    return this.usersService.restore(id);
+  }
+
+  // Optional: deactivate/activate
+  @Patch(':id/toggle-active')
+  @Roles('admin')
+  @ApiOkResponse({ description: 'Toggle active state of a user.' })
+  async toggleActive(@Param('id') id: string) {
+    return this.usersService.toggleActive(id);
   }
 }

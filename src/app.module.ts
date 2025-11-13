@@ -12,8 +12,8 @@ import { CourseLessonsModule } from './course-lessons/course-lessons.module';
 import { CourseModuleModule } from './course-module/course-module.module';
 import { CourseModule } from './course/course.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
-import { UsersModule } from './users/users.module';
 import { UploadModule } from './upload/upload.module';
+import { UsersModule } from './users/users.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -22,8 +22,8 @@ import { UploadModule } from './upload/upload.module';
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads', // public base path
     }),
-    UsersModule,
     AuthModule,
+    UsersModule,
     CourseCategoryModule,
     CourseModule,
     CourseModuleModule,
