@@ -1,11 +1,15 @@
 {
   "version": 2,
-  "buildCommand": "npm ci && npm run build",
-  "functions": {
-    "api/index.ts": {
-      "runtime": "nodejs22.x"
+  "builds": [
+    {
+      "src": "dist/main.js",
+      "use": "@vercel/node"
     }
-  },
-  "builds": [{ "src": "api/index.ts", "use": "@vercel/node" }],
-  "routes": [{ "src": "/(.*)", "dest": "api/index.ts" }]
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "dist/main.js"
+    }
+  ]
 }
