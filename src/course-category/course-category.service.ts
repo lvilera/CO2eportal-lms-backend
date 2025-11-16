@@ -31,15 +31,23 @@ export class CourseCategoryService {
     const filter: FilterQuery<CourseCategoryDocument> = { deletedAt: null };
     if (q) filter.$text = { $search: q };
 
-    const [items, total] = await Promise.all([
-      this.model
-        .find(filter)
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .sort({ createdAt: -1 }),
-      this.model.countDocuments(filter),
-    ]);
-    return { items, total, page, limit };
+    if (page == -1) {
+      const [items, total] = await Promise.all([
+        this.model.find(filter).sort({ createdAt: -1 }),
+        this.model.countDocuments(filter),
+      ]);
+      return items;
+    } else {
+      const [items, total] = await Promise.all([
+        this.model
+          .find(filter)
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .sort({ createdAt: -1 }),
+        this.model.countDocuments(filter),
+      ]);
+      return { items, total, page, limit };
+    }
   }
 
   async findOne(idOrSlug: string) {

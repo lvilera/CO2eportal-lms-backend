@@ -7,7 +7,6 @@ export class PaginatedQueryDto {
   @ApiPropertyOptional({ default: 1, minimum: 1 })
   @Type(() => Number)
   @IsInt()
-  @Min(1)
   @IsOptional()
   page?: number = 1;
 

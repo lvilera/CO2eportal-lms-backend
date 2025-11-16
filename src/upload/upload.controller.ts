@@ -1,3 +1,4 @@
+// src/upload/upload.controller.ts
 import {
   BadRequestException,
   Controller,
@@ -6,51 +7,16 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-// Swagger (optional but recommended)
 import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { relative } from 'path';
+import { buildMulterOptions, FileType } from './upload.config';
 
-const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE = 2 * 1024 * 1024; // 2MB
-
-function fileName(
-  req: any,
-  file: Express.Multer.File,
-  cb: (e: any, name: string) => void,
-) {
-  const base = file.originalname.replace(/\.[^/.]+$/, '');
-  const safe = base
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  const stamp = Date.now();
-  cb(null, `${safe}-${stamp}${extname(file.originalname)}`);
-}
-
-@Controller('files')
 @ApiTags('files')
+@Controller('files')
 export class UploadController {
-  @Post('upload')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: 'uploads', // ensure the folder exists
-        filename: fileName,
-      }),
-      limits: { fileSize: MAX_SIZE },
-      fileFilter: (req, file, cb) => {
-        if (!ALLOWED_MIME.includes(file.mimetype)) {
-          return cb(
-            new BadRequestException('Only JPG, PNG, WEBP allowed'),
-            false,
-          );
-        }
-        cb(null, true);
-      },
-    }),
-  )
+  // IMAGE
+  @Post('image')
+  @UseInterceptors(FileInterceptor('file', buildMulterOptions('image')))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -60,16 +26,75 @@ export class UploadController {
       },
     },
   })
-  upload(@UploadedFile() file?: Express.Multer.File) {
-    if (!file) throw new BadRequestException('No file uploaded');
+  uploadImage(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No image uploaded');
+    return this.buildResponse(file, 'image');
+  }
 
-    // The static server maps /uploads -> ./uploads
-    const url = `/uploads/${file.filename}`;
+  // VIDEO
+  @Post('video')
+  @UseInterceptors(FileInterceptor('file', buildMulterOptions('video')))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  uploadVideo(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No video uploaded');
+    return this.buildResponse(file, 'video');
+  }
+
+  // AUDIO
+  @Post('audio')
+  @UseInterceptors(FileInterceptor('file', buildMulterOptions('audio')))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  uploadAudio(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No audio uploaded');
+    return this.buildResponse(file, 'audio');
+  }
+
+  // DOCUMENT (PDF)
+  @Post('document')
+  @UseInterceptors(FileInterceptor('file', buildMulterOptions('document')))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  uploadDocument(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No document uploaded');
+    return this.buildResponse(file, 'document');
+  }
+
+  private buildResponse(file: Express.Multer.File, type: FileType | string) {
+    // file.path: e.g. "uploads/2025/01/pdf/filename.pdf"
+    const relPath = relative('uploads', file.path).replace(/\\/g, '/');
+    // Public URL, assuming you serve /uploads statically from ./uploads
+    const url = `/uploads/${relPath}`;
+
     return {
       success: true,
+      type,
       filename: file.filename,
       mimetype: file.mimetype,
       size: file.size,
+      path: relPath, // relative path, if you want to store in DB
       url,
     };
   }
