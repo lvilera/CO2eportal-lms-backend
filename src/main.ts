@@ -9,11 +9,33 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.use(cookieParser());
-  app.enableCors({
-    origin: [/^http:\/\/localhost:\d+$/, /\.localhost:4001\$/],
-    credentials: true,
-  });
+  // Enable CORS
 
+  app.enableCors({
+    origin: '*',
+  });
+  // app.enableCors({
+  //   origin: [
+  //     'http://localhost:3000',
+  //     'http://localhost:4001',
+  //     'http://194.233.69.252:4001',
+  //     'https://lms.co2eportal.com',
+  //     'https://www.lms.co2eportal.com', // Add www subdomain
+  //   ],
+  //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  //   allowedHeaders: [
+  //     'Content-Type',
+  //     'Authorization',
+  //     'X-Requested-With',
+  //     'Accept',
+  //     'Origin',
+  //     'Access-Control-Allow-Headers',
+  //     'Access-Control-Request-Method',
+  //     'X-API-Key',
+  //   ],
+  //   credentials: true,
+  //   exposedHeaders: ['Set-Cookie', 'Authorization'], // Add this line
+  // });
   // app.setGlobalPrefix('api', {
   //   exclude: ['/'],
   // });
