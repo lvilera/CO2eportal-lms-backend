@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
-export class CourseModuleEntity {
+export class CourseModule {
   _id: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Course', required: true, index: true })
@@ -14,12 +14,8 @@ export class CourseModuleEntity {
   @Prop()
   description?: string;
 
-  @Prop({ type: [Types.ObjectId], ref: 'Lesson' })
-  lessonOrder: Types.ObjectId[];
-
   @Prop({ default: 0, index: true })
   position: number;
 }
-export type CourseModuleDocument = HydratedDocument<CourseModuleEntity>;
-export const CourseModuleSchema =
-  SchemaFactory.createForClass(CourseModuleEntity);
+export type CourseModuleDocument = HydratedDocument<CourseModule>;
+export const CourseModuleSchema = SchemaFactory.createForClass(CourseModule);

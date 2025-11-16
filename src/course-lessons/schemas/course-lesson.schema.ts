@@ -10,7 +10,7 @@ export class CourseLesson {
 
   @Prop({
     type: Types.ObjectId,
-    ref: 'ModuleEntity',
+    ref: 'CourseModule',
     required: true,
     index: true,
   })

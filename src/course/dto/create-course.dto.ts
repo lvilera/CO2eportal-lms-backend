@@ -6,7 +6,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUrl,
 } from 'class-validator';
 
 export class CreateCourseDto {
@@ -30,7 +29,7 @@ export class CreateCourseDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsUrl()
+  @IsString()
   thumbnailUrl?: string;
 
   @ApiPropertyOptional()

@@ -33,7 +33,6 @@ export class QueryUserDto {
   @Type(() => Number)
   @IsOptional()
   @IsInt()
-  @Min(1)
   page?: number = 1;
 
   @ApiPropertyOptional({ default: 10 })

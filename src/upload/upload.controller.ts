@@ -96,6 +96,7 @@ export class UploadController {
       size: file.size,
       path: relPath, // relative path, if you want to store in DB
       url,
+      fullPath: process.env.FILE_PUBLIC_URL + '/uploads/' + relPath,
     };
   }
 }

@@ -40,6 +40,16 @@ class ResourceDto {
 }
 
 export class CreateCourseLessonDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  courseId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  moduleId?: string;
+
   @ApiProperty()
   @IsString()
   title: string;

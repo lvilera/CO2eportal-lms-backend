@@ -6,52 +6,52 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CourseLessonsService } from './course-lessons.service';
 import { CreateCourseLessonDto } from './dto/create-course-lesson.dto';
 import { UpdateCourseLessonDto } from './dto/update-course-lesson.dto';
 
 @ApiTags('Lessons')
 @ApiBearerAuth()
-@Controller('courses/:courseId/modules/:moduleId/lessons')
+@Controller('lessons')
 export class CourseLessonsController {
   constructor(private readonly service: CourseLessonsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create lesson under a module' })
-  create(
-    @Param('courseId') courseId: string,
-    @Param('moduleId') moduleId: string,
-    @Body() dto: CreateCourseLessonDto,
-  ) {
-    return this.service.create(courseId, moduleId, dto);
+  @ApiOperation({ summary: 'Create a course lesson' })
+  @ApiResponse({ status: 201, description: 'Course created' })
+  create(@Body() dto: CreateCourseLessonDto) {
+    return this.service.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'List lessons for a module' })
-  list(@Param('moduleId') moduleId: string) {
-    return this.service.findByModule(moduleId);
+  @ApiOperation({ summary: 'List course lessons (paginated + search)' })
+  findAll(@Query() q: any) {
+    return this.service.findAll(q);
   }
 
   @Get(':idOrSlug')
-  @ApiOperation({ summary: 'Get lesson by id or slug' })
-  getOne(@Param('idOrSlug') idOrSlug: string) {
+  @ApiOperation({ summary: 'Get a course lesson by id or slug' })
+  findOne(@Param('idOrSlug') idOrSlug: string) {
     return this.service.findOne(idOrSlug);
   }
 
-  @Put(':lessonId')
-  @ApiOperation({ summary: 'Update lesson' })
-  update(
-    @Param('lessonId') lessonId: string,
-    @Body() dto: UpdateCourseLessonDto,
-  ) {
-    return this.service.update(lessonId, dto);
+  @Put(':id')
+  @ApiOperation({ summary: 'Update a course lesson' })
+  update(@Param('id') id: string, @Body() dto: UpdateCourseLessonDto) {
+    return this.service.update(id, dto);
   }
 
-  @Delete(':lessonId')
-  @ApiOperation({ summary: 'Delete lesson' })
-  remove(@Param('lessonId') lessonId: string) {
-    return this.service.remove(lessonId);
+  @Delete(':id')
+  @ApiOperation({ summary: 'Soft delete a course lesson' })
+  remove(@Param('id') id: string) {
+    return this.service.remove(id);
   }
 }

@@ -11,6 +11,11 @@ export class CreateCourseModuleDto {
   @IsString()
   description?: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  courseId?: string;
+
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()
   @IsInt()

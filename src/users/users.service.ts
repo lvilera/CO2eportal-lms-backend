@@ -149,31 +149,40 @@ export class UsersService {
 
     const skip = (page - 1) * limit;
     const sortObj: Record<string, SortOrder> = { [sortField]: order };
+    if (page == -1) {
+      const [items, total] = await Promise.all([
+        this.userModel
+          .find(filter)
 
-    const [items, total] = await Promise.all([
-      this.userModel
-        .find(filter)
-        .sort(sortObj)
-        .skip(skip)
-        .limit(limit)
-        .lean()
-        .exec(),
-      this.userModel.countDocuments(filter),
-    ]);
-
-    return {
-      data: items.map((u) => ({
-        id: u._id.toString(),
-        email: u.email,
-        firstName: u.firstName,
-        lastName: u.lastName,
-        role: u.role,
-        isActive: u.isActive,
-        createdAt: u.createdAt,
-        updatedAt: u.updatedAt,
-      })),
-      meta: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
-    };
+          .exec(),
+        this.userModel.countDocuments(filter),
+      ]);
+      return items;
+    } else {
+      const [items, total] = await Promise.all([
+        this.userModel
+          .find(filter)
+          .sort(sortObj)
+          .skip(skip)
+          .limit(limit)
+          .lean()
+          .exec(),
+        this.userModel.countDocuments(filter),
+      ]);
+      return {
+        data: items.map((u) => ({
+          id: u._id.toString(),
+          email: u.email,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          role: u.role,
+          isActive: u.isActive,
+          createdAt: u.createdAt,
+          updatedAt: u.updatedAt,
+        })),
+        meta: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
+      };
+    }
   }
 
   /** ADMIN: Get by id (sanitized) */
