@@ -1,39 +1,66 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { ExpressAdapter } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-
-const express = require('express');
-
-const server = express();
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import cookieParser = require('cookie-parser');
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
-    logger: ['error', 'warn', 'log'],
+  const app = await NestFactory.create(AppModule);
+
+  app.use(cookieParser());
+  // Enable CORS
+
+  app.enableCors({
+    origin: '*',
   });
+  // app.enableCors({
+  //   origin: [
+  //     'http://localhost:3000',
+  //     'http://localhost:4001',
+  //     'http://194.233.69.252:4001',
+  //     'https://lms.co2eportal.com',
+  //     'https://www.lms.co2eportal.com', // Add www subdomain
+  //   ],
+  //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  //   allowedHeaders: [
+  //     'Content-Type',
+  //     'Authorization',
+  //     'X-Requested-With',
+  //     'Accept',
+  //     'Origin',
+  //     'Access-Control-Allow-Headers',
+  //     'Access-Control-Request-Method',
+  //     'X-API-Key',
+  //   ],
+  //   credentials: true,
+  //   exposedHeaders: ['Set-Cookie', 'Authorization'], // Add this line
+  // });
+  // app.setGlobalPrefix('api', {
+  //   exclude: ['/'],
+  // });
 
-  app.enableCors();
-  await app.init();
-  return server;
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
+
+  app.useGlobalFilters(new AllExceptionsFilter());
+
+  // ✅ Swagger Configuration
+  const config = new DocumentBuilder()
+    .setTitle('LMS API')
+    .setDescription('Authentication & User Management API')
+    .setVersion('1.0.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('/api/docs', app, document);
+
+  await app.listen(process.env.PORT || 3000);
 }
-
-let cachedApp: any;
-
-export default async function handler(req: any, res: any) {
-  console.log('Function invoked');
-
-  if (!cachedApp) {
-    console.log('Bootstrapping application...');
-    try {
-      cachedApp = await bootstrap();
-      console.log('Application bootstrapped successfully');
-    } catch (error) {
-      console.error('Bootstrap error:', error);
-      return res.status(500).json({
-        error: 'Bootstrap failed',
-        details: error.message,
-      });
-    }
-  }
-
-  return cachedApp(req, res);
-}
+bootstrap();
