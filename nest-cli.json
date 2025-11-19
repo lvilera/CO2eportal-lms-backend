@@ -4,5 +4,5 @@
   "compilerOptions": {
     "deleteOutDir": true
   },
-  "entryFile": "index"
+  "entryFile": "main"
 }
