@@ -1,16 +1,20 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { ExpressAdapter } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
+import express from 'express';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
-import cookieParser = require('cookie-parser');
+
+const server = express();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
 
   app.use(cookieParser());
-  // Enable CORS
 
+  // Enable CORS
   app.enableCors({
     origin: '*',
   });
@@ -20,7 +24,7 @@ async function bootstrap() {
   //     'http://localhost:4001',
   //     'http://194.233.69.252:4001',
   //     'https://lms.co2eportal.com',
-  //     'https://www.lms.co2eportal.com', // Add www subdomain
+  //     'https://www.lms.co2eportal.com',
   //   ],
   //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   //   allowedHeaders: [
@@ -34,8 +38,9 @@ async function bootstrap() {
   //     'X-API-Key',
   //   ],
   //   credentials: true,
-  //   exposedHeaders: ['Set-Cookie', 'Authorization'], // Add this line
+  //   exposedHeaders: ['Set-Cookie', 'Authorization'],
   // });
+
   // app.setGlobalPrefix('api', {
   //   exclude: ['/'],
   // });
@@ -61,6 +66,31 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('/api/docs', app, document);
 
-  await app.listen(process.env.PORT || 3000);
+  // Don't call app.listen() for serverless
+  await app.init();
+
+  return server;
 }
-bootstrap();
+
+// Serverless function handler
+let cachedApp: express.Express;
+
+export default async function handler(
+  req: express.Request,
+  res: express.Response,
+) {
+  if (!cachedApp) {
+    try {
+      cachedApp = await bootstrap();
+    } catch (error) {
+      console.error('Failed to bootstrap application:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: 'Failed to initialize application',
+      });
+      return;
+    }
+  }
+
+  return cachedApp(req, res);
+}
