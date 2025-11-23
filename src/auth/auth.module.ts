@@ -7,8 +7,11 @@ import { UsersModule } from 'src/users/users.module';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
+import { AdminAuthGuard } from './guards/admin-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { InstructorAuthGuard } from './guards/instructor-auth.guard';
 
 @Module({
   imports: [
@@ -17,7 +20,14 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtAccessStrategy, JwtRefreshStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtAuthGuard,
+    AdminAuthGuard,
+    InstructorAuthGuard,
+    JwtRefreshStrategy,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

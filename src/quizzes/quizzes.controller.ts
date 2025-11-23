@@ -1,90 +1,119 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { CreateQuizDto } from './dto/create-quiz.dto';
+import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { QuizzesService } from './quizzes.service';
 
-@ApiTags('Quizzes')
-@ApiBearerAuth()
-@Controller('courses/:courseId/quizzes')
+@Controller('quizzes')
+@UseGuards(JwtAuthGuard)
 export class QuizzesController {
-  constructor(private readonly service: QuizzesService) {}
+  constructor(private readonly quizzesService: QuizzesService) {}
+
+  // QUIZ CRUD ENDPOINTS
 
   @Post()
-  @ApiOperation({
-    summary:
-      'Create a course-level quiz (optionally provide moduleId/lessonId in query)',
-  })
-  create(
-    @Param('courseId') courseId: string,
-    @Body() dto: CreateQuizDto,
-    @Query('moduleId') moduleId?: string,
-    @Query('lessonId') lessonId?: string,
-  ) {
-    return this.service.createQuiz(courseId, dto, { moduleId, lessonId });
+  create(@Body() createQuizDto: CreateQuizDto) {
+    return this.quizzesService.create(createQuizDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'List quizzes by course' })
-  list(@Param('courseId') courseId: string) {
-    return this.service.listQuizzesByCourse(courseId);
-  }
-
-  @Get(':quizId')
-  @ApiOperation({ summary: 'Get quiz' })
-  get(@Param('quizId') quizId: string) {
-    return this.service.getQuiz(quizId);
-  }
-
-  @Put(':quizId')
-  @ApiOperation({ summary: 'Update quiz' })
-  update(@Param('quizId') quizId: string, @Body() dto: Partial<CreateQuizDto>) {
-    return this.service.updateQuiz(quizId, dto);
-  }
-
-  @Delete(':quizId')
-  @ApiOperation({ summary: 'Delete quiz (and its questions)' })
-  remove(@Param('quizId') quizId: string) {
-    return this.service.removeQuiz(quizId);
-  }
-
-  // Questions (nested)
-  @Post(':quizId/questions')
-  @ApiOperation({ summary: 'Add question to quiz' })
-  addQ(@Param('quizId') quizId: string, @Body() dto: CreateQuestionDto) {
-    return this.service.addQuestion(quizId, dto);
-  }
-
-  @Get(':quizId/questions')
-  @ApiOperation({ summary: 'List questions for quiz' })
-  listQ(@Param('quizId') quizId: string) {
-    return this.service.listQuestions(quizId);
-  }
-
-  @Put(':quizId/questions/:questionId')
-  @ApiOperation({ summary: 'Update question' })
-  updQ(
-    @Param('questionId') questionId: string,
-    @Body() dto: Partial<CreateQuestionDto>,
+  findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('courseId') courseId?: string,
+    @Query('status') status?: string,
   ) {
-    return this.service.updateQuestion(questionId, dto);
+    return this.quizzesService.findAll(page, limit, courseId, status);
   }
 
-  @Delete(':quizId/questions/:questionId')
-  @ApiOperation({ summary: 'Delete question from quiz' })
-  delQ(
-    @Param('quizId') quizId: string,
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.quizzesService.findOne(id);
+  }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() updateQuizDto: UpdateQuizDto) {
+    return this.quizzesService.update(id, updateQuizDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.quizzesService.remove(id);
+  }
+
+  // QUIZ MANAGEMENT ENDPOINTS
+
+  @Put(':id/publish')
+  publishQuiz(@Param('id') id: string) {
+    return this.quizzesService.publishQuiz(id);
+  }
+
+  @Put(':id/archive')
+  archiveQuiz(@Param('id') id: string) {
+    return this.quizzesService.archiveQuiz(id);
+  }
+
+  @Get(':id/validate')
+  validateQuiz(@Param('id') id: string) {
+    return this.quizzesService.validateQuizConfiguration(id);
+  }
+
+  @Get(':id/stats')
+  getQuizStats(@Param('id') id: string) {
+    return this.quizzesService.getQuizStats(id);
+  }
+
+  // QUESTION MANAGEMENT ENDPOINTS
+
+  @Post('questions')
+  addQuestion(@Body() createQuestionDto: CreateQuestionDto) {
+    return this.quizzesService.addQuestion(createQuestionDto);
+  }
+
+  @Put('questions/:questionId')
+  updateQuestion(
     @Param('questionId') questionId: string,
+    @Body() updateData: Partial<UpdateQuizDto>,
   ) {
-    return this.service.removeQuestion(quizId, questionId);
+    return this.quizzesService.updateQuestion(questionId, updateData);
+  }
+
+  @Delete('questions/:questionId')
+  removeQuestion(@Param('questionId') questionId: string) {
+    return this.quizzesService.removeQuestion(questionId);
+  }
+
+  @Get(':id/questions')
+  getQuizQuestions(@Param('id') id: string) {
+    return this.quizzesService.getQuizQuestions(id);
+  }
+
+  @Put(':id/reorder-questions')
+  reorderQuestions(
+    @Param('id') id: string,
+    @Body('questionOrder') questionOrder: string[],
+  ) {
+    return this.quizzesService.reorderQuestions(id, questionOrder);
+  }
+
+  // STUDENT ENDPOINTS
+
+  @Get('student/:id')
+  getQuizForStudent(@Param('id') id: string) {
+    return this.quizzesService.getQuizForStudent(id);
   }
 }

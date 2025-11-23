@@ -11,6 +11,8 @@ import { CourseCategoryModule } from './course-category/course-category.module';
 import { CourseLessonsModule } from './course-lessons/course-lessons.module';
 import { CourseModuleModule } from './course-module/course-module.module';
 import { CourseModule } from './course/course.module';
+import { EnrollmentModule } from './enrollment/enrollment.module';
+import { QuizAttemptModule } from './quiz-attempts/quiz-attempt.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
 import { UploadModule } from './upload/upload.module';
 import { UsersModule } from './users/users.module';
@@ -28,7 +30,9 @@ import { UsersModule } from './users/users.module';
     CourseModule,
     CourseModuleModule,
     CourseLessonsModule,
+    EnrollmentModule,
     QuizzesModule,
+    QuizAttemptModule,
     CertificatesModule,
     UploadModule,
   ],

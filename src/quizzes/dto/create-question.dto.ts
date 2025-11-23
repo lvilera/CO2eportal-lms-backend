@@ -1,66 +1,66 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
   IsEnum,
-  IsInt,
+  IsMongoId,
+  IsNumber,
   IsOptional,
   IsString,
   Min,
-  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 
-class OptionDto {
-  @ApiProperty()
+class QuestionOptionDto {
   @IsString()
-  text!: string;
+  text: string;
 
-  @ApiProperty()
-  isCorrect!: boolean;
+  @IsBoolean()
+  isCorrect: boolean;
+
+  @IsOptional()
+  @IsString()
+  explanation?: string;
 }
 
 export class CreateQuestionDto {
-  @ApiProperty({
-    enum: ['single_choice', 'multiple_choice', 'true_false', 'short_answer'],
-  })
+  @IsMongoId()
+  quizId: string;
+
   @IsEnum(['single_choice', 'multiple_choice', 'true_false', 'short_answer'])
-  type!: 'single_choice' | 'multiple_choice' | 'true_false' | 'short_answer';
+  type: string;
 
-  @ApiProperty()
   @IsString()
-  text!: string;
+  text: string;
 
-  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   explanation?: string;
 
-  @ValidateIf((o) =>
-    ['single_choice', 'multiple_choice', 'true_false'].includes(o.type),
-  )
-  @ApiPropertyOptional({ type: [OptionDto] })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => OptionDto)
-  options?: OptionDto[];
+  @Type(() => QuestionOptionDto)
+  options?: QuestionOptionDto[];
 
-  @ValidateIf((o) => o.type === 'short_answer')
-  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   answerText?: string;
 
-  @ApiPropertyOptional({ default: 1 })
-  @IsOptional()
-  @IsInt()
+  @IsNumber()
   @Min(0)
-  points?: number = 1;
+  points: number;
 
-  @ApiPropertyOptional({ default: 0 })
-  @IsOptional()
-  @IsInt()
+  @IsNumber()
   @Min(0)
-  position?: number = 0;
+  position: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  timeLimitSeconds?: number;
+
+  @IsOptional()
+  @IsEnum(['easy', 'medium', 'hard'])
+  difficulty?: string;
 }

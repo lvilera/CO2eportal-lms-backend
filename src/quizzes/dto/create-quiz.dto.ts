@@ -1,31 +1,61 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsMongoId,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class CreateQuizDto {
-  @ApiProperty()
   @IsString()
   title: string;
 
-  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   instructions?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  timeLimitSeconds?: number | null;
+  @IsMongoId()
+  courseId: string;
 
-  @ApiPropertyOptional({ default: 1 })
   @IsOptional()
-  @IsInt()
+  @IsMongoId()
+  moduleId?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  lessonId?: string;
+
+  @IsNumber()
+  @Min(0)
+  timeLimitSeconds?: number;
+
+  @IsNumber()
   @Min(1)
-  attemptsAllowed?: number = 1;
+  attemptsAllowed: number;
 
-  @ApiPropertyOptional({ default: 70 })
-  @IsOptional()
-  @IsInt()
+  @IsNumber()
   @Min(0)
-  passMarkPercent?: number = 70;
+  @Max(100)
+  passMarkPercent: number;
+
+  @IsBoolean()
+  @IsOptional()
+  shuffleQuestions?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  shuffleOptions?: boolean;
+
+  @IsEnum(['draft', 'published', 'archived'])
+  @IsOptional()
+  status?: string;
+
+  @IsOptional()
+  availableFrom?: Date;
+
+  @IsOptional()
+  availableUntil?: Date;
 }

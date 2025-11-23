@@ -3,8 +3,6 @@ import { HydratedDocument, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Quiz {
-  _id: Types.ObjectId;
-
   @Prop({ type: Types.ObjectId, ref: 'Course', required: true, index: true })
   courseId: Types.ObjectId;
 
@@ -17,7 +15,8 @@ export class Quiz {
   @Prop({ required: true })
   title: string;
 
-  @Prop() instructions?: string;
+  @Prop()
+  instructions?: string;
 
   @Prop({ default: 0 })
   timeLimitSeconds?: number;
@@ -28,8 +27,30 @@ export class Quiz {
   @Prop({ default: 70 })
   passMarkPercent: number;
 
-  @Prop({ type: [Types.ObjectId], ref: 'Question' })
+  @Prop({ type: [Types.ObjectId], ref: 'Question', default: [] })
   questionOrder: Types.ObjectId[];
+
+  @Prop({
+    enum: ['draft', 'published', 'archived'],
+    default: 'draft',
+  })
+  status: string;
+
+  @Prop()
+  availableFrom?: Date;
+
+  @Prop()
+  availableUntil?: Date;
+
+  @Prop({ default: false })
+  shuffleQuestions: boolean;
+
+  @Prop({ default: false })
+  shuffleOptions: boolean;
+
+  @Prop({ default: 0 })
+  totalPoints: number;
 }
+
 export type QuizDocument = HydratedDocument<Quiz>;
 export const QuizSchema = SchemaFactory.createForClass(Quiz);
