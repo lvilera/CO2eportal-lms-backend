@@ -35,7 +35,7 @@ export class CreateCourseDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  category?: string;
+  categoryId?: string;
 
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()

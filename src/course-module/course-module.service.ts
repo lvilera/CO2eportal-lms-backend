@@ -34,7 +34,7 @@ export class CourseModuleService {
     // Special case: page = -1 → return all items (no pagination, no skip)
     if (page === -1) {
       const [items, total] = await Promise.all([
-        this.model.find(filter).sort({ createdAt: -1 }).populate('courseId'),
+        this.model.find(filter).sort({ createdAt: -1 }),
         this.model.countDocuments(filter),
       ]);
       // Follow the pattern you used in CourseCategoryService
@@ -61,7 +61,9 @@ export class CourseModuleService {
     const filter: any = Types.ObjectId.isValid(idOrSlug)
       ? { _id: idOrSlug }
       : { slug: idOrSlug };
-    const doc = await this.model.findOne({ ...filter, deletedAt: null });
+    const doc = await this.model
+      .findOne({ ...filter, deletedAt: null })
+      .populate('courseId');
     if (!doc) throw new NotFoundException('CourseModule not found');
     return doc;
   }

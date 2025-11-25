@@ -30,7 +30,9 @@ export class CourseService {
         .find(filter)
         .skip((page - 1) * limit)
         .limit(limit)
-        .sort({ createdAt: -1 }),
+        .sort({ createdAt: -1 })
+        .populate('categoryId')
+        .populate('instructorId'),
       this.model.countDocuments(filter),
     ]);
     return { items, total, page, limit };
@@ -40,7 +42,10 @@ export class CourseService {
     const filter: any = Types.ObjectId.isValid(idOrSlug)
       ? { _id: idOrSlug }
       : { slug: idOrSlug };
-    const doc = await this.model.findOne({ ...filter, deletedAt: null });
+    const doc = await this.model
+      .findOne({ ...filter, deletedAt: null })
+      .populate('categoryId')
+      .populate('instructorId');
     if (!doc) throw new NotFoundException('Course not found');
     return doc;
   }

@@ -15,6 +15,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { CourseLessonsService } from './course-lessons.service';
+import { CourseLessonQueryDto } from './dto/course-lesson-query.dto';
 import { CreateCourseLessonDto } from './dto/create-course-lesson.dto';
 import { UpdateCourseLessonDto } from './dto/update-course-lesson.dto';
 
@@ -33,7 +34,7 @@ export class CourseLessonsController {
 
   @Get()
   @ApiOperation({ summary: 'List course lessons (paginated + search)' })
-  findAll(@Query() q: any) {
+  findAll(@Query() q: CourseLessonQueryDto) {
     return this.service.findAll(q);
   }
 

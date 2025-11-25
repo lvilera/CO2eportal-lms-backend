@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
+import { CourseDocument } from 'src/course/schemas/course.schema';
+import { CourseLessonQueryDto } from './dto/course-lesson-query.dto';
 import { CreateCourseLessonDto } from './dto/create-course-lesson.dto';
 import { UpdateCourseLessonDto } from './dto/update-course-lesson.dto';
 import {
@@ -22,40 +24,42 @@ export class CourseLessonsService {
     page = 1,
     limit = 20,
     q,
-  }: {
-    page?: number;
-    limit?: number;
-    q?: string;
-  }) {
-    const filter: FilterQuery<CourseLessonDocument> = { deletedAt: null };
-    if (q) filter.$text = { $search: q };
+    courseId,
+    moduleId,
+  }: CourseLessonQueryDto) {
+    const filter: FilterQuery<CourseDocument> = { deletedAt: null };
 
-    // page = -1 → return all (no pagination, no skip)
-    if (page === -1) {
+    if (q) {
+      filter.$text = { $search: q };
+    }
+
+    if (courseId) {
+      filter.courseId = new Types.ObjectId(courseId);
+    }
+
+    if (moduleId) {
+      filter.moduleId = new Types.ObjectId(moduleId);
+    }
+    if (limit == -1) {
+      console.log(filter);
+
+      const items = await this.model.find(filter);
+
+      return items;
+    } else {
       const [items, total] = await Promise.all([
         this.model
           .find(filter)
+          .skip((page - 1) * limit)
+          .limit(limit)
           .sort({ createdAt: -1 })
           .populate('courseId')
           .populate('moduleId'),
         this.model.countDocuments(filter),
       ]);
-      return items;
+
+      return { items, total, page, limit };
     }
-
-    const safePage = page < 1 ? 1 : page;
-
-    const [items, total] = await Promise.all([
-      this.model
-        .find(filter)
-        .skip((safePage - 1) * limit)
-        .limit(limit)
-        .sort({ createdAt: -1 })
-        .populate('courseId')
-        .populate('moduleId'),
-      this.model.countDocuments(filter),
-    ]);
-    return { items, total, page: safePage, limit };
   }
 
   async findOne(idOrSlug: string) {
