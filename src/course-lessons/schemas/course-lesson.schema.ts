@@ -39,9 +39,6 @@ export class CourseLesson {
 
   @Prop({ default: 0, index: true })
   position: number;
-
-  @Prop({ type: Date, default: null })
-  deletedAt: Date | null;
 }
 export type CourseLessonDocument = HydratedDocument<CourseLesson>;
 export const CourseLessonSchema = SchemaFactory.createForClass(CourseLesson);

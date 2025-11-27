@@ -47,9 +47,8 @@ export class QuizzesService {
       this.quizModel
         .find(filter)
         .populate('courseId', 'title')
-        .populate('moduleId', 'name')
+        .populate('moduleId', 'title')
         .populate('lessonId', 'title')
-        .populate('questionOrder')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -68,13 +67,8 @@ export class QuizzesService {
   async findOne(id: string): Promise<Quiz> {
     const quiz = await this.quizModel
       .findById(id)
-      .populate('courseId', 'title description')
-      .populate('moduleId', 'name')
-      .populate('lessonId', 'title')
-      .populate({
-        path: 'questionOrder',
-        options: { sort: { position: 1 } },
-      })
+      .populate('courseId', 'title')
+      .populate('moduleId', 'title')
       .exec();
 
     if (!quiz) {
@@ -91,11 +85,6 @@ export class QuizzesService {
 
     if (!quiz) {
       throw new NotFoundException(`Quiz with ID ${id} not found`);
-    }
-
-    // Recalculate total points if questions changed
-    if (updateQuizDto.questionOrder) {
-      await this.calculateTotalPoints(id);
     }
 
     return quiz;
@@ -161,6 +150,23 @@ export class QuizzesService {
   }
 
   // QUESTION MANAGEMENT METHODS
+  async findAllQuestions(
+    quizId?: string,
+    status?: string,
+  ): Promise<{ items: Question[] }> {
+    const filter: any = {};
+
+    if (quizId) filter.quizId = quizId;
+    if (status) filter.status = status;
+
+    const items = await this.questionModel
+      .find(filter)
+      .populate('quizId', 'title')
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return { items };
+  }
 
   async addQuestion(createQuestionDto: CreateQuestionDto): Promise<Question> {
     const quiz = await this.quizModel.findById(createQuestionDto.quizId).exec();
@@ -182,6 +188,19 @@ export class QuizzesService {
     await this.calculateTotalPoints(createQuestionDto.quizId);
 
     return savedQuestion;
+  }
+
+  async findOneQuestion(questionId: string): Promise<Question> {
+    const question = await this.questionModel
+      .findById(questionId)
+      .populate('quizId', 'title')
+      .exec();
+
+    if (!question) {
+      throw new NotFoundException(`Quiz with ID ${questionId} not found`);
+    }
+
+    return question;
   }
 
   async updateQuestion(
@@ -314,28 +333,11 @@ export class QuizzesService {
       throw new BadRequestException('Quiz is no longer available');
     }
 
-    // Prepare questions for student (hide correct answers)
-    const safeQuestions = (quiz.questionOrder as any).map((question) => ({
-      _id: question._id,
-      text: question.text,
-      type: question.type,
-      points: question.points,
-      timeLimitSeconds: question.timeLimitSeconds,
-      options: question.options
-        ? question.options.map((opt) => ({
-            _id: opt._id,
-            text: opt.text,
-            // Don't include isCorrect for students!
-          }))
-        : [],
-    }));
-
     return {
       _id: quiz._id,
       title: quiz.title,
       instructions: quiz.instructions,
       timeLimitSeconds: quiz.timeLimitSeconds,
-      questions: safeQuestions,
       totalPoints: quiz.totalPoints,
       passMarkPercent: quiz.passMarkPercent,
     };

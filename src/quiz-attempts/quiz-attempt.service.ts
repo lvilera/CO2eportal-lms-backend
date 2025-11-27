@@ -80,7 +80,7 @@ export class QuizAttemptService {
       attemptNumber,
       startedAt: new Date(),
       status: 'in_progress',
-      totalPoints: await this.calculateTotalPoints(quiz.questionOrder as any),
+      // totalPoints: await this.calculateTotalPoints(quiz.questionOrder as any),
     });
 
     return attempt.save();

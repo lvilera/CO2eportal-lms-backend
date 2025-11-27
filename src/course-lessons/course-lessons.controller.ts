@@ -38,6 +38,12 @@ export class CourseLessonsController {
     return this.service.findAll(q);
   }
 
+  @Get('with-quiz')
+  @ApiOperation({ summary: 'List course lessons (paginated + search)' })
+  findAllWithQuiz(@Query() q: CourseLessonQueryDto) {
+    return this.service.findAllWithQuiz(q);
+  }
+
   @Get(':idOrSlug')
   @ApiOperation({ summary: 'Get a course lesson by id or slug' })
   findOne(@Param('idOrSlug') idOrSlug: string) {

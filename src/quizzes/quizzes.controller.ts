@@ -9,17 +9,14 @@ import {
   Post,
   Put,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { QuizzesService } from './quizzes.service';
 
 @Controller('quizzes')
-@UseGuards(JwtAuthGuard)
 export class QuizzesController {
   constructor(private readonly quizzesService: QuizzesService) {}
 
@@ -78,10 +75,19 @@ export class QuizzesController {
   }
 
   // QUESTION MANAGEMENT ENDPOINTS
+  @Get(':id/questions')
+  findAllQuestions(@Param('id') id: string, @Query('status') status?: string) {
+    return this.quizzesService.findAllQuestions(id, status);
+  }
 
   @Post('questions')
   addQuestion(@Body() createQuestionDto: CreateQuestionDto) {
     return this.quizzesService.addQuestion(createQuestionDto);
+  }
+
+  @Get('questions/:questionId')
+  findOneQuestion(@Param('questionId') questionId: string) {
+    return this.quizzesService.findOneQuestion(questionId);
   }
 
   @Put('questions/:questionId')

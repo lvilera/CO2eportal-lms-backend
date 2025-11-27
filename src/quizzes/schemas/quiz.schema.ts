@@ -6,11 +6,8 @@ export class Quiz {
   @Prop({ type: Types.ObjectId, ref: 'Course', required: true, index: true })
   courseId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'ModuleEntity', index: true })
+  @Prop({ type: Types.ObjectId, ref: 'CourseModule', index: true })
   moduleId?: Types.ObjectId;
-
-  @Prop({ type: Types.ObjectId, ref: 'Lesson', index: true })
-  lessonId?: Types.ObjectId;
 
   @Prop({ required: true })
   title: string;
@@ -27,8 +24,8 @@ export class Quiz {
   @Prop({ default: 70 })
   passMarkPercent: number;
 
-  @Prop({ type: [Types.ObjectId], ref: 'Question', default: [] })
-  questionOrder: Types.ObjectId[];
+  @Prop({ default: 0 })
+  order: number;
 
   @Prop({
     enum: ['draft', 'published', 'archived'],
