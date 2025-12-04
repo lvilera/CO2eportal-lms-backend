@@ -13,6 +13,7 @@ import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 
 import { Roles } from 'src/common/dto/roles.decorator';
+import { AssignCompanyDto } from './dto/assign-company.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
@@ -83,6 +84,17 @@ export class UsersController {
   @ApiOkResponse({ description: 'List users with pagination and filters.' })
   async list(@Query() query: QueryUserDto) {
     return this.usersService.list(query);
+  }
+
+  @Post('company')
+  @ApiOkResponse({ description: 'Update user by id.' })
+  assignCompany(@Body() dto: AssignCompanyDto) {
+    return this.usersService.assignCompany(dto);
+  }
+
+  @Delete(':id/company')
+  unassignCompany(@Param('id') id: string) {
+    return this.usersService.unassignCompany(id);
   }
 
   // Get one by id

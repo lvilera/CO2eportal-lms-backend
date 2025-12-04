@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
   IsEnum,
@@ -32,4 +32,9 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(['user', 'admin', 'instructor'])
   role?: 'user' | 'admin' | 'instructor';
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  companyId?: string;
 }

@@ -1,6 +1,6 @@
 // src/users/schemas/user.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User> & {
   createdAt: Date;
@@ -32,6 +32,9 @@ export class User {
 
   @Prop({ default: 'user', enum: ['user', 'admin', 'instructor'] })
   role: 'user' | 'admin' | 'instructor';
+
+  @Prop({ type: Types.ObjectId, ref: 'Company', default: null })
+  companyId: Types.ObjectId | null;
 
   @Prop({ default: true })
   isActive: boolean;

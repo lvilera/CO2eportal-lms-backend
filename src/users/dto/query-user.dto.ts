@@ -16,6 +16,11 @@ export class QueryUserDto {
   @IsString()
   q?: string;
 
+  @ApiPropertyOptional({ description: 'Search by companyId' })
+  @IsOptional()
+  @IsString()
+  companyId?: string;
+
   @ApiPropertyOptional({ enum: ['user', 'admin', 'instructor'] })
   @IsOptional()
   @IsIn(['user', 'admin', 'instructor'])

@@ -7,6 +7,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcryptjs';
 import { FilterQuery, Model, SortOrder } from 'mongoose';
 
+import { MailerService } from '@nestjs-modules/mailer';
+import { Types } from 'mongoose';
+import { AssignCompanyDto } from './dto/assign-company.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
@@ -17,6 +20,7 @@ import { User, UserDocument } from './schemas/user.schema';
 export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private readonly mailerService: MailerService,
   ) {}
 
   /** UTIL */
@@ -130,6 +134,7 @@ export class UsersService {
     const {
       q,
       role,
+      companyId,
       isActive,
       page = 1,
       limit = 10,
@@ -138,6 +143,8 @@ export class UsersService {
 
     const filter: FilterQuery<UserDocument> = { deletedAt: null };
     if (role) filter.role = role;
+    if (companyId) filter.companyId = new Types.ObjectId(companyId);
+
     if (typeof isActive === 'string') filter.isActive = isActive === 'true';
 
     if (q) {
@@ -162,6 +169,7 @@ export class UsersService {
       const [items, total] = await Promise.all([
         this.userModel
           .find(filter)
+          .populate('companyId')
           .sort(sortObj)
           .skip(skip)
           .limit(limit)
@@ -179,6 +187,7 @@ export class UsersService {
           isActive: u.isActive,
           createdAt: u.createdAt,
           updatedAt: u.updatedAt,
+          companyId: u.companyId,
         })),
         meta: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
       };
@@ -271,5 +280,67 @@ export class UsersService {
   async compareRefreshToken(provided: string, storedHash?: string | null) {
     if (!provided || !storedHash) return false;
     return bcrypt.compare(provided, storedHash);
+  }
+
+  async assignCompany(dto: AssignCompanyDto) {
+    const email = dto.email.trim().toLowerCase();
+
+    // 1) Try to find existing user
+    let user = await this.userModel.findOne({ email }).exec();
+
+    // 2) If not found → create new user and send credentials
+    if (!user) {
+      const plainPassword = 'CO2LMS';
+      const passwordHash = await bcrypt.hash(plainPassword, 10);
+
+      user = new this.userModel({
+        email,
+        firstName: 'New',
+        lastName: 'User',
+        role: 'user',
+        password: passwordHash,
+        company: dto.companyId,
+      });
+
+      await user.save();
+
+      // Send credential email
+      await this.mailerService.sendMail({
+        to: user.email,
+        subject: 'Your new LMS account credentials',
+        text: `Hello ${user.firstName},
+
+        An account has been created for you on our LMS and linked to your company.
+
+        Login details:
+        Email: ${user.email}
+        Password: ${plainPassword}
+
+        For security, please log in and change your password as soon as possible.
+
+        Best regards,
+        LMS Support Team`,
+      });
+
+      await user.populate('companyId');
+      return user;
+    }
+
+    // 3) If user exists → just assign/update company
+    user.companyId = new Types.ObjectId(dto.companyId);
+    await user.save();
+    await user.populate('companyId');
+
+    return user;
+  }
+
+  async unassignCompany(userId: string) {
+    const user = await this.userModel
+      .findByIdAndUpdate(userId, { company: null }, { new: true })
+      .exec();
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return user;
   }
 }

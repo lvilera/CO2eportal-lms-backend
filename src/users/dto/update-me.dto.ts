@@ -18,4 +18,9 @@ export class UpdateMeDto {
   @IsOptional()
   @IsEmail()
   email: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  companyId?: string;
 }
