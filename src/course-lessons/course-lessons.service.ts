@@ -20,8 +20,31 @@ export class CourseLessonsService {
     private readonly quizModel: Model<QuizDocument>,
   ) {}
 
+  private generateSlugSuffix(length = 6): string {
+    return Math.random()
+      .toString(36)
+      .substring(2, 2 + length);
+  }
+
   async create(dto: CreateCourseLessonDto) {
-    return this.model.create(dto);
+    const baseSlug = dto.slug;
+    let slug = baseSlug;
+
+    // Try a few times to guarantee uniqueness
+    for (let i = 0; i < 5; i++) {
+      const exists = await this.model.exists({ slug });
+
+      if (!exists) {
+        // We found a free slug
+        return this.model.create({ ...dto, slug });
+      }
+
+      // Slug taken -> append random string
+      slug = `${baseSlug}-${this.generateSlugSuffix()}`;
+    }
+
+    // Final attempt – let Mongo enforce uniqueness
+    return this.model.create({ ...dto, slug });
   }
 
   async findAll({
@@ -86,30 +109,39 @@ export class CourseLessonsService {
     }
     // Run in parallel and use lean for performance
     const [lessons, quizzes] = await Promise.all([
-      this.model.find(filter),
-      this.quizModel.find(filter),
+      this.model
+        .find(filter)
+        .populate('courseId')
+        .populate('moduleId')
+        .lean()
+        .exec(),
+      this.quizModel
+        .find(filter)
+        .populate('courseId')
+        .populate('moduleId')
+        .lean()
+        .exec(),
     ]);
 
     const lessonItems: CourseContentItemDto[] = lessons.map((l: any) => ({
+      ...l,
       id: l._id.toString(),
       title: l.title,
       createdAt: l.createdAt,
-      courseId: l.courseId?.toString(),
-      moduleId: l.moduleId?.toString(),
       type: 'lesson',
     }));
 
     const quizItems: CourseContentItemDto[] = quizzes.map((qz: any) => ({
+      ...qz,
       id: qz._id.toString(),
       title: qz.title,
       createdAt: qz.createdAt,
-      courseId: qz.courseId?.toString(),
-      moduleId: qz.moduleId?.toString(),
       type: 'quiz',
     }));
 
     const merged = [...lessonItems, ...quizItems].sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
     return { items: merged };

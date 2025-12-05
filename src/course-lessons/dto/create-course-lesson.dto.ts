@@ -14,7 +14,7 @@ import {
 class VideoDto {
   @ApiPropertyOptional()
   @IsOptional()
-  @IsUrl()
+  @IsString()
   url?: string;
 
   @ApiPropertyOptional()
