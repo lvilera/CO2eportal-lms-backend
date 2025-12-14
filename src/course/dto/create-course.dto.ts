@@ -59,6 +59,11 @@ export class CreateCourseDto {
   @IsNumber()
   price?: number = 0;
 
+  @ApiPropertyOptional({ default: 0 })
+  @IsOptional()
+  @IsNumber()
+  durationMinutes?: number = 0;
+
   @ApiPropertyOptional({ default: false })
   @IsOptional()
   @IsBoolean()
