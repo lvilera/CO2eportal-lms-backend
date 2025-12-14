@@ -1,9 +1,5 @@
 // services/enrollment.service.ts
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
@@ -20,13 +16,18 @@ export class EnrollmentService {
   // CREATE - Enroll student in course
   async create(createEnrollmentDto: CreateEnrollmentDto): Promise<Enrollment> {
     // Check if enrollment already exists
-    const existingEnrollment = await this.enrollmentModel.findOne({
-      userId: new Types.ObjectId(createEnrollmentDto.userId),
-      courseId: new Types.ObjectId(createEnrollmentDto.courseId),
-    });
+    const existingEnrollment = await this.enrollmentModel
+      .findOne({
+        userId: createEnrollmentDto.userId,
+        courseId: createEnrollmentDto.courseId,
+      })
+      .populate('userId')
+      .populate('courseId')
+      .populate('currentModule')
+      .populate('currentLesson');
 
     if (existingEnrollment) {
-      throw new ConflictException('Student is already enrolled in this course');
+      return existingEnrollment;
     }
 
     const enrollment = new this.enrollmentModel({
@@ -55,10 +56,10 @@ export class EnrollmentService {
     const [items, total] = await Promise.all([
       this.enrollmentModel
         .find(filter)
-        .populate('userId', 'name email')
-        .populate('courseId', 'title description')
-        .populate('currentModule', 'name')
-        .populate('currentLesson', 'title')
+        .populate('userId')
+        .populate('courseId')
+        .populate('currentModule')
+        .populate('currentLesson')
         .sort({ enrollmentDate: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
@@ -72,10 +73,10 @@ export class EnrollmentService {
   async findOne(id: string): Promise<Enrollment> {
     const enrollment = await this.enrollmentModel
       .findById(id)
-      .populate('userId', 'name email avatar')
-      .populate('courseId', 'title description thumbnail')
-      .populate('currentModule', 'name order')
-      .populate('currentLesson', 'title duration')
+      .populate('userId')
+      .populate('courseId')
+      .populate('currentModule')
+      .populate('currentLesson')
       .exec();
 
     if (!enrollment) {
@@ -95,10 +96,10 @@ export class EnrollmentService {
         userId: new Types.ObjectId(userId),
         courseId: new Types.ObjectId(courseId),
       })
-      .populate('userId', 'name email')
-      .populate('courseId', 'title description')
-      .populate('currentModule', 'name')
-      .populate('currentLesson', 'title')
+      .populate('userId')
+      .populate('courseId')
+      .populate('currentModule')
+      .populate('currentLesson')
       .exec();
 
     if (!enrollment) {
@@ -115,6 +116,9 @@ export class EnrollmentService {
     id: string,
     updateEnrollmentDto: UpdateEnrollmentDto,
   ): Promise<Enrollment> {
+    if (updateEnrollmentDto?.progress == 100) {
+      updateEnrollmentDto.completionDate = new Date();
+    }
     const enrollment = await this.enrollmentModel
       .findByIdAndUpdate(
         id,
@@ -195,9 +199,11 @@ export class EnrollmentService {
   // Get user's enrollments
   async getUserEnrollments(userId: string): Promise<Enrollment[]> {
     return this.enrollmentModel
-      .find({ userId: new Types.ObjectId(userId) })
-      .populate('courseId', 'title description thumbnail instructor duration')
-      .sort({ lastAccessed: -1 })
+      .find({ userId })
+      .populate('userId')
+      .populate('courseId')
+      .populate('currentModule')
+      .populate('currentLesson')
       .exec();
   }
 

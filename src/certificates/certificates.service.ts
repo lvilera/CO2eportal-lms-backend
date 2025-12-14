@@ -10,22 +10,36 @@ export class CertificatesService {
     @InjectModel(Certificate.name) private model: Model<CertificateDocument>,
   ) {}
 
-  create(dto: CreateCertificateDto) {
+  async create(dto: CreateCertificateDto) {
+    const existing = await this.model
+      .findOne({
+        userId: new Types.ObjectId(dto.userId),
+        courseId: new Types.ObjectId(dto.courseId),
+      })
+      .populate('userId')
+      .populate('courseId');
+
+    if (existing) {
+      return existing;
+    }
+
     return this.model.create({
       ...dto,
       userId: new Types.ObjectId(dto.userId),
       courseId: new Types.ObjectId(dto.courseId),
-      issuedAt: new Date(dto.issuedAt),
       expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
     });
   }
 
   listByUser(userId: string) {
-    return this.model.find({ userId });
+    return this.model
+      .find({ userId: new Types.ObjectId(userId) })
+      .populate('userId')
+      .populate('courseId');
   }
 
   findOne(id: string) {
-    return this.model.findById(id);
+    return this.model.findById(id).populate('userId').populate('courseId');
   }
 
   async remove(id: string) {
